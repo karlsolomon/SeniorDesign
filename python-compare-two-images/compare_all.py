@@ -6,7 +6,9 @@ from skimage.measure import structural_similarity as ssim
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
+import cv2.cv as cv
 import os
+import copy
 
 def my_range(start, end, step):
     while start <= end:
@@ -31,25 +33,21 @@ def print_results(a, b, i):
 	s = ssim(a, b)
 	file.write("%s\tMSE:%.2f\tSSIM:%.6f\n" % (str(i+1),m,s))
 
-
-
+def diff_polarize(a,b,i):
+	c = cv2.copyMakeBorder(a,0,0,0,0,cv2.BORDER_REPLICATE)
+	c[::] = (a[::] - b[::]) / (a[::] + b[::])
+	cv2.imwrite("images/will/diff%s.jpeg" % (str(i)), c) #Write image to file
+	
 # load all images in the images/ directory and compare each a & b versions of the files
 #path, dirs, files = os.walk("images").next()
 #file_count = len(files)
 #file_count = file_count / 2 #a and b for each image
-file = open("comparison.txt", "w")
-minNum = 702
-maxNum = 710
-for i in my_range(minNum,maxNum,2):
-	print(i)
-	if(i < 9):
-		a = cv2.imread("images/IMG_0%s.JPG" % (str(i)))
-		b = cv2.imread("images/IMG_0%s.JPG" % (str(i+1)))
-		print_results(a,b,i)
-	else:
-		a = cv2.imread("images/IMG_0%s.JPG" % (str(i)))
-		b = cv2.imread("images/IMG_0%s.JPG" % (str(i+1)))
-		print_results(a,b,i)
-file.close()
+minNum = 1
+maxNum = 29
+for i in my_range(minNum,maxNum,1):
+	a = cv2.imread("images/will/Co%s.jpeg" % (str(i)))
+	b = cv2.imread("images/will/Cross%s.jpeg" % (str(i)))
+	diff_polarize(a,b,i)
+
 
 
