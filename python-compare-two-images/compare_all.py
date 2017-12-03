@@ -27,7 +27,7 @@ def print_results(a, b, i):
 	a = cv2.cvtColor(a, cv2.COLOR_BGR2GRAY)
 	b = cv2.cvtColor(b, cv2.COLOR_BGR2GRAY)
 	m = mse(a, b)
-	s = ssim(a, b)
+	s = 0.0 #s = ssim(a, b)  #trying to calculate this causes what appears to be inf loop. Basically games my CPU...
 	file.write("%s\tMSE:%.2f\tSSIM:%.6f\n" % (str(i+1),m,s))
 
 def diff_polarize(a,b,i):
@@ -45,10 +45,12 @@ def diff_polarize(a,b,i):
 
 minNum = 1
 maxNum = 29
+file = open("comparison.txt", "w")
 for i in my_range(minNum,maxNum,1):
 	a = cv2.imread("images/will/Co%s.jpeg" % (str(i)))
 	b = cv2.imread("images/will/Cross%s.jpeg" % (str(i)))
+	print_results(a,b,i)
 	diff_polarize(a,b,i)
-
+file.close()
 
 
