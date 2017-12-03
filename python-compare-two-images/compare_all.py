@@ -35,13 +35,22 @@ def print_results(a, b, i):
 
 def diff_polarize(a,b,i):
 	c = cv2.copyMakeBorder(a,0,0,0,0,cv2.BORDER_REPLICATE)
-	c[::] = (a[::] - b[::]) / (a[::] + b[::])
+	a = np.float32(a)
+	a = a*(1.0/255)
+	b = np.float32(b)
+	b = b*(1.0/255)
+	c = (a[::] - b[::]) / (a[::] + b[::])
+	c[c < 0] = 0
+	c = c*255
+	c = np.uint8(c)
+	c = 255-c
 	cv2.imwrite("images/will/diff%s.jpeg" % (str(i)), c) #Write image to file
 	
 # load all images in the images/ directory and compare each a & b versions of the files
 #path, dirs, files = os.walk("images").next()
 #file_count = len(files)
 #file_count = file_count / 2 #a and b for each image
+#i = 1
 minNum = 1
 maxNum = 29
 for i in my_range(minNum,maxNum,1):
