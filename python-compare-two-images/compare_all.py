@@ -26,14 +26,12 @@ def print_results(a, b, i):
 	agray = cv2.cvtColor(a, cv2.COLOR_BGR2GRAY)
 	bgray = cv2.cvtColor(b, cv2.COLOR_BGR2GRAY)
 	m = mse(agray, bgray)
-	print("mse done: %s" % str(i))
-	#score = 0.0
-	#file.write("%s\t%.2f\n" % (str(i+1),m))
-	score = ssim(agray, bgray)
-	print("ssim done: %s" % str(i))
+	file.write("%.2f\n" % m)
+	#score = ssim(agray, bgray)
+	#print("ssim done: %s" % str(i))
 	#(score,diff) = measure.compare_ssim(a, b, full=True)  #trying to calculate this causes what appears to be inf loop. Basically games my CPU...
 	#diff = (diff*255).astype("uint8")
-	file.write("%s\tMSE:%.2f\tSSIM:%.6f\n" % (str(i+1),m,score))
+	#file.write("%s\tMSE:%.2f\tSSIM:%.6f\n" % (str(i+1),m,score))
 	#cv2.imshow("Diff", diff)
 	#cv2.waitKey(0)
 
@@ -54,15 +52,20 @@ def diff_polarize(a,b,i):
 	cv2.imwrite("images/will/diff%s.jpeg" % (str(i)), c) #Write image to file
 
 minNum = 0
-maxNum = 74
+maxNum = 29
 #for i in my_range(minNum,maxNum,1):
 #	a = cv2.imread("images/will/Co%s.jpeg" % (str(i)))
 #	b = cv2.imread("images/will/Cross%s.jpeg" % (str(i)))
 #	diff_polarize(a,b,i)
 
-file = open("comparisonvideo.txt", "w")
-a = cv2.imread("images/speed/video/frame%s.jpg" % (str(minNum)))
+pathStart = "images/speed/Dustin/"
+resolution = "4k/30_"
+video = "Hand2/"
+path = "%s%s%s" % (pathStart, resolution, video)
+file = open("compareAll.txt", "a")
+a = cv2.imread("%sframe%s.jpg" % (path, str(minNum)))
+file.write("%s\n" % path)
 for i in my_range(minNum, maxNum, 1):
-	b = cv2.imread("images/speed/video/frame%s.jpg" % (str(i)))
+	b = cv2.imread("%sframe%s.jpg" % (path, str(i)))
 	print_results(a,b,i)
 file.close()
