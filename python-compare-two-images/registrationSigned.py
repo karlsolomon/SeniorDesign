@@ -72,13 +72,13 @@ def diff_polarize(a,b,i):
 	b = np.float32(b)
 	b = b*(1.0/255)
 	c = (a[::] - b[::])
-	c = (c*127) + 127	
+	c = (c*127) + 128	
 	c = np.uint8(c)
 	# d = c*0;
 	# d = d + 127;
 	print("\trange %s\tmean %s\tstdev %s\tmax %s\t min%s\t" % (np.max(c) - np.min(c), np.mean(c) - 127, np.std(c), np.max(c) - 127, np.min(c) - 127))
-	cv2.imwrite("images/1.26/diff%s.jpeg" % (str(i)), c) #Write image to file
-	#cv2.imwrite("images/1.26/diffControl.jpeg", d)
+	cv2.imwrite("images/2.5/diff%s.jpeg" % (str(i)), c) #Write image to file
+	#cv2.imwrite("images/2.5/diffControl.jpeg", d)
 	#white_balance_simple(c, a, b, i)
 
 
@@ -90,81 +90,115 @@ def white_balance_simple(white, a, b, i):
 	a = np.float32(a)
 	b = np.float32(b)
 	diff = (a[::] - b[::])
-	diff = diff + 127	
+	diff = diff + 128	
 	diff = np.uint8(diff)
 	balanced = (avg - white[::]) # px = 100 avg = 50, balanced = -50 (immediate scale) 
 	balanced = balanced + diff
 	balanced = np.uint8(balanced)
-	cv2.imwrite("images/1.26/balanceSimple%s.jpeg" % (str(i)), balanced) #Write image to file
+	cv2.imwrite("images/2.5/balanceSimple%s.jpeg" % (str(i)), balanced) #Write image to file
 	print("B:\trange %s\tmean %s\tstdev %s\tmax %s\t min%s\t" % (np.max(balanced) - np.min(balanced), np.mean(balanced) - 127, np.std(balanced), np.max(balanced) - 127, np.min(balanced) - 127))
-
 
 # requires white balance images under both illumation methods
 def white_balance_pixel(whiteA, whiteB, a, b, i):
 	diff = cv2.copyMakeBorder(a,0,0,0,0,cv2.BORDER_REPLICATE)
-	a = (a[::] - whiteA[::])
-	b = (b[::] - whiteB[::])
-	a = a + 256
-	b = b + 256	
+
+	aB, aG, aR = cv2.split(a)
+	bB, bG, bR = cv2.split(b)
+	aB_W, aG_W, aR_W = cv2.split(whiteA)
+	bB_W, bG_W, bR_W = cv2.split(whiteB)
+	
+	avgAB_W = np.mean(aB_W)
+	avgAG_W = np.mean(aG_W)
+	avgAR_W = np.mean(aR_W)
+
+	avgBB_W = np.mean(bB_W)
+	avgBG_W = np.mean(bG_W)
+	avgBR_W = np.mean(bR_W)
+
+	deltaAB = aB - avgAB_W
+	deltaAG = aG - avgAG_W
+	deltaAR = aR - avgAR_W
+
+	deltaBB = bB - avgBB_W
+	deltaBG = bG - avgBG_W
+	deltaBR = bR - avgBR_W
+
+	a = cv2.merge((np.uint8(-1*np.min(deltaAB) + deltaAB), np.uint8(-1*np.min(deltaAG)  + deltaAG), np.uint8(-1*np.min(deltaAR)  + deltaAR)))
+	b = cv2.merge((np.uint8(-1*np.min(deltaBB) + deltaBB), np.uint8(-1*np.min(deltaBG)  + deltaBG), np.uint8(-1*np.min(deltaBR)  + deltaBR)))
+
+	cv2.imwrite("images/2.5/balancePixelWiseA%s.jpeg" % (str(i)), np.uint8(a)) #Write image to file
+	cv2.imwrite("images/2.5/balancePixelWiseB%s.jpeg" % (str(i)), np.uint8(b)) #Write image to file
 	diff = (a[::] - b[::])
-	diff = diff + 127	
+	diff = diff + 128	
 	diff = np.uint8(diff)
-	cv2.imwrite("images/1.26/balancePixelWise%s.jpeg" % (str(i)), diff) #Write image to file
+	cv2.imwrite("images/2.5/balancePixelWise%s.jpeg" % (str(i)), diff) #Write image to file
 	print("BC:\trange %s\tmean %s\tstdev %s\tmax %s\t min%s\t" % (np.max(diff) - np.min(diff), np.mean(diff) - 127, np.std(diff), np.max(diff) - 127, np.min(diff) - 127))
+	return (a,b)
 
 def white_balance_will(darkA, whiteA, a, darkB, whiteB, b, i):
 	diff = cv2.copyMakeBorder(a,0,0,0,0,cv2.BORDER_REPLICATE)
 
 
-def white_balance_color_single(a):
-	B, G, R = cv2.split(a)
-	BMax = np.max(B)
-	GMax = np.max(G)
-	RMax = np.max(R)
+def white_balance_color_single(a, whiteA, i):
+	B, G, R = cv2.split(whiteA)
+	B1, G1, R1 = cv2.split(a)
+
+	R1 = R1.astype(np.float64)
+	G1 = G1.astype(np.float64)
+	B1 = B1.astype(np.float64)
+
+	BMax = float(np.max(B))
+	GMax = float(np.max(G))
+	RMax = float(np.max(R))
 	BMod = True
 	GMod = True
 	RMod = True
 	Max = max(BMax, GMax, RMax)
-	print("%s %s %s\n" % (BMax, GMax, RMax))
-	if Max == BMax:
-		BMod = False
-	elif Max == GMax:
-		GMod = False
-	elif Max == RMax:
-		RMod = False
+	print("%s %s %s\n" % (RMax, GMax, BMax))
+	B1 *= Max/BMax
+	G1 *= Max/GMax
+	R1 *= Max/RMax
+	R1 = R1.astype(np.uint8)
+	G1 = G1.astype(np.uint8)
+	B1 = B1.astype(np.uint8)
 
-	if BMod:
-		B *= Max/BMax
-	if GMod:
-		G *= Max/GMax
-	if RMod:
-		R *= Max/RMax
-	return cv2.merge((B,G,R))
+	BMax = np.max(B1)
+	GMax = np.max(G1)
+	RMax = np.max(R1)
+	image = cv2.merge((B1,G1,R1))
+	cv2.imwrite("images/2.5/whiteBalanced%s.jpeg" % (str(i)), image) #Write image to file
+	return image
 
-def white_balance_color(a, b):
-	a = white_balance_color_single(a)
-	b = white_balance_color_single(b)
+def white_balance_color(whiteA, whiteB, a, b):
+	a = white_balance_color_single(a, whiteA, 0)
+	b = white_balance_color_single(b, whiteB, 1)
 	return (a,b)
 
 
 
-path = "images/1.26/"
+path = "images/2.5/"
 file = open("compareAll.txt", "w")
 file.write("outer\n")
-a = cv2.imread("images/1.26/IMG_8049.JPG")
-b = cv2.imread("images/1.26/IMG_8050.JPG")
+
+whiteA = cv2.imread("images/2.5/IMG_8093.JPG")
+a = cv2.imread("images/2.5/IMG_8094.JPG")
+whiteB = cv2.imread("images/2.5/IMG_8095.JPG")
+b = cv2.imread("images/2.5/IMG_8096.JPG")
+
 print_results(a,b)
 diff_polarize(a,b,0)
-(a,b) = white_balance_color(a,b)
+(aPixel, bPixel) = white_balance_pixel(whiteA, whiteB, a, b, 8)
+diff_polarize(aPixel,bPixel,8)
+(a,b) = white_balance_color(whiteA, whiteB, a, b)
 diff_polarize(a,b,1)
 
-file.write("inner\n")
-a = cv2.imread("images/1.26/IMG_8074.JPG")
-b = cv2.imread("images/1.26/IMG_8075.JPG")
-print_results(a,b)
-diff_polarize(a,b,2)
-(a,b) = white_balance_color(a,b)
-diff_polarize(a,b,3)
+# file.write("inner\n")
+# a = cv2.imread("images/2.5/IMG_8074.JPG")
+# b = cv2.imread("images/2.5/IMG_8075.JPG")
+# print_results(a,b)
+# diff_polarize(a,b,2)
+# (a,b) = white_balance_color(a,b)
+# diff_polarize(a,b,3)
 
 #writeWarpMatrix(a,b,path,0)
 
