@@ -5,6 +5,8 @@
 from skimage.measure import structural_similarity as ssim
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
+import matplotlib.colorbar as colorbar
+import matplotlib.cm as cm
 import numpy as np
 import cv2
 import os
@@ -19,16 +21,21 @@ def diff_color(a,b,i,color):
 	b = np.float32(b)
 	b = b*(1.0/255)
 	c = a-b
-	c = (c*127) + 128
+	c = (c*128) + 127.5
 	c = np.uint8(c)
 	minimum = np.min(c)
 	maximum = np.max(c)
 	stdev = np.std(c)
 	mean = np.mean(c)
+	c[0:2] = 0
+	c[0:1] = 255
 	print("\trange %s\tmean %s\tstdev %s\tmax %s\t min%s\t" % (maximum - minimum, mean - 127, stdev, maximum - 127, minimum - 127))
-	#cv2.imwrite("images/2.7/diff%s_%s.jpeg" % (str(i), color), c)
+	
 	plt.close()
-	plt.imshow(c)
+
+
+	cmap = cm.coolwarm
+	plt.imshow(c, cmap)
 	plt.colorbar()
 	plt.savefig("images/2.7/diff%s_%s.png" % (str(i), color))
 	plt.pause(5)
