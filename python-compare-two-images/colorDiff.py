@@ -14,13 +14,14 @@ import copy
 from skimage import measure
 import math
 
-acceptableRange = 5  # use to set "even illumination" tolerance definition
+acceptableRange = 10  # use to set "even illumination" tolerance definition
 mid = 128			 
 scalar = 127
 truncate = True 	# will "truncate" image around mid +/- acceptableRange. So any pixel that isn't deepest blue/red is w/in tolerance
+path = "images/2.27/"
 
 def diff_color(a,b,i,color, truncate):
-	c = a #mpimg.copyMakeBorder(a,0,0,0,0,mpimg.BORDER_REPLICATE)
+	c = a
 	a = np.float32(a)
 	a = a*(1.0/255)
 	b = np.float32(b)
@@ -33,18 +34,21 @@ def diff_color(a,b,i,color, truncate):
 	mean = np.mean(c)
 
 	if truncate:
-		c[c>mid+acceptableRange] = mid+acceptableRange
-		c[c<mid-acceptableRange] = mid-acceptableRange
+		c[c>mid+acceptableRange] = 255
+		c[c<mid-acceptableRange] = 0
 	else:
 		c[0:2] = 0
 		c[0:1] = 255
 	c = np.uint8(c)
-	print("\trange %s\tmean %s\tstdev %s\tmax %s\t min%s\t" % (maximum - minimum, mean - scalar, stdev, maximum - scalar, minimum - scalar))
+	#print("\trange %s\tmean %s\tstdev %s\tmax %s\t min%s\t" % (maximum - minimum, mean - scalar, stdev, maximum - scalar, minimum - scalar))
 	plt.close()
 	cmap = cm.RdBu
 	plt.imshow(c, cmap)
 	plt.colorbar()
-	plt.savefig("images/2.7/diff%s_%s.png" % (str(i), color))
+	if truncate:
+		plt.savefig("%struncate/%s_%s.png" % (path, str(i), color))
+	else:
+		plt.savefig("%snormal/%s_%s.png" % (path, str(i), color))
 	return c
 
 def diff_colors(imageA, imageB,i, truncate):
@@ -59,20 +63,64 @@ def diff_colors(imageA, imageB,i, truncate):
 	diff[:,:,0] = diff_color(blueA,blueB,i,'blue', truncate)
 	diff[:,:,1] = diff_color(greenA,greenB,i,'green', truncate)
 	diff[:,:,2] = diff_color(redA,redB,i,'red', truncate)
-	cv2.imwrite("images/2.7/diff%s_merge.jpeg"% (str(i)), diff)
+	#cv2.imwrite("%sdiff%s_together.jpeg" % (path, str(i)), diff)
 	return diff
 
-path = "images/2.7/"
-file = open("compareAll.txt", "w")
-file.write("outer\n")
+def white_balance(imageA, whiteA):
+	c = whiteA
+	c = c - mid
+	c = c * -1
+	return imageA + c
+
+# a = mpimg.imread("%sPin12_White1.JPG" % path)
+# b = mpimg.imread("%sPin12_White2.JPG" % path)
+# diff5 = diff_colors(a,b,'12White', truncate)
+
+# a = mpimg.imread("%sPin13_White1.JPG" % path)
+# b = mpimg.imread("%sPin13_White2.JPG" % path)
+# diff10 = diff_colors(a,b,'13White', truncate)
+
+truncate = True
+a = mpimg.imread("%sPin12_mole1.JPG" % path)
+b = mpimg.imread("%sPin13_mole1.JPG" % path)
+aW = mpimg.imread("%sPin12_White1.JPG" % path)
+bW = mpimg.imread("%sPin13_White1.JPG" % path)
+aBalanced = white_balance(a, aW)
+bBalalced = white_balance(b, bW)
+diff_colors(aBalanced,bBalalced,'1_Balanced', truncate)
+diff_colors(a,b,'1_raw', truncate)
+diff_colors(aW,bW,'1_white', truncate)
+
+a = mpimg.imread("%sPin12_mole2.JPG" % path)
+b = mpimg.imread("%sPin13_mole2.JPG" % path)
+aW = mpimg.imread("%sPin12_White2.JPG" % path)
+bW = mpimg.imread("%sPin13_White2.JPG" % path)
+aBalanced = white_balance(a, aW)
+bBalalced = white_balance(b, bW)
+diff_colors(aBalanced,bBalalced,'2_Balanced', truncate)
+diff_colors(a,b,'2_raw', truncate)
+diff_colors(aW,bW,'2_white', truncate)
 
 
-a = mpimg.imread("images/2.7/IMG_8130.JPG")
-b = mpimg.imread("images/2.7/IMG_8131.JPG")
-diff5 = diff_colors(a,b,5, truncate)
+truncate = False
+a = mpimg.imread("%sPin12_mole1.JPG" % path)
+b = mpimg.imread("%sPin13_mole1.JPG" % path)
+aW = mpimg.imread("%sPin12_White1.JPG" % path)
+bW = mpimg.imread("%sPin13_White1.JPG" % path)
+aBalanced = white_balance(a, aW)
+bBalalced = white_balance(b, bW)
+diff_colors(aBalanced,bBalalced,'1_Balanced', truncate)
+diff_colors(a,b,'1_raw', truncate)
+diff_colors(aW,bW,'1_white', truncate)
 
-a = mpimg.imread("images/2.7/IMG_8137.JPG")
-b = mpimg.imread("images/2.7/IMG_8136.JPG")
-diff10 = diff_colors(a,b,10, truncate)
 
+a = mpimg.imread("%sPin12_mole2.JPG" % path)
+b = mpimg.imread("%sPin13_mole2.JPG" % path)
+aW = mpimg.imread("%sPin12_White2.JPG" % path)
+bW = mpimg.imread("%sPin13_White2.JPG" % path)
+aBalanced = white_balance(a, aW)
+bBalalced = white_balance(b, bW)
+diff_colors(aBalanced,bBalalced,'2_Balanced', truncate)
+diff_colors(a,b,'2_raw', truncate)
+diff_colors(aW,bW,'2_white', truncate)
 
