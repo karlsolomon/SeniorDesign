@@ -14,7 +14,7 @@ import copy
 from skimage import measure
 import math
 
-acceptableRange = 5  # use to set "even illumination" tolerance definition
+acceptableRange = 2  # use to set "even illumination" tolerance definition
 mid = 128			 
 scalar = 127
 truncate = True 	# will "truncate" image around mid +/- acceptableRange. So any pixel that isn't deepest blue/red is w/in tolerance
@@ -42,19 +42,22 @@ def diff_color(a,b,i,color, truncate):
 		else:
 			c[c>mid+acceptableRange] = mid + acceptableRange
 			c[c<mid-acceptableRange] = mid - acceptableRange
-	else:
-		c[0:2] = 0
-		c[0:1] = 255
+	# else:
+	# 	c[0,1] = 0
+	# 	c[1,0] = 255
 	c = np.uint8(c)
 	file.write("\trange %s\tmean %s\tstdev %s\tmax %s\t min%s\n" % (maximum - minimum, mean - scalar, stdev, maximum - scalar, minimum - scalar))
 	plt.close()
 	cmap = cm.RdBu
-	plt.imshow(c, cmap)
+	plt.imshow(c, cmap)	
+	#plt.axis('off')
 	plt.colorbar()
 	if truncate:
 		if wideSpread:
+			#plt.savefig("%struncateWide/%s_%s.png" % (path, str(i), color), bbox_inches='tight')
 			plt.savefig("%struncateWide/%s_%s.png" % (path, str(i), color))
 		else:
+			#plt.savefig("%struncate/%s_%s.png" % (path, str(i), color), bbox_inches='tight')
 			plt.savefig("%struncate/%s_%s.png" % (path, str(i), color))
 	else:
 		plt.savefig("%snormal/%s_%s.png" % (path, str(i), color))
@@ -72,6 +75,7 @@ def diff_colors(imageA, imageB,i, truncate):
 	diff[:,:,0] = diff_color(blueA,blueB,i,'blue', truncate)
 	diff[:,:,1] = diff_color(greenA,greenB,i,'green', truncate)
 	diff[:,:,2] = diff_color(redA,redB,i,'red', truncate)
+	diff_color(imageA, imageB, i, 'all', truncate)
 	#cv2.imwrite("%sdiff%s_together.jpeg" % (path, str(i)), diff)
 	return diff
 
@@ -89,7 +93,6 @@ def white_balance(imageA, whiteA):
 # b = mpimg.imread("%sPin13_White2.JPG" % path)
 # diff10 = diff_colors(a,b,'13White', truncate)
 
-truncate = True
 file.write('\ncontrol_1\n')
 a = mpimg.imread("%sAF_none1.JPG" % path)
 b = mpimg.imread("%sAF_none2.JPG" % path)
@@ -100,45 +103,45 @@ a = mpimg.imread("%sIMG_8249.JPG" % path)
 b = mpimg.imread("%sIMG_8250.JPG" % path)
 diff_colors(a,b,'10mA_Control_2', truncate)
 
-file.write('\n10mA\n')
-a = mpimg.imread("%sAF_none1.JPG" % path)
-b = mpimg.imread("%sIMG_8249.JPG" % path)
-diff_colors(a,b,'10mA', truncate)
+# file.write('\n10mA\n')
+# a = mpimg.imread("%sAF_none1.JPG" % path)
+# b = mpimg.imread("%sIMG_8249.JPG" % path)
+# diff_colors(a,b,'10mA', truncate)
 
 file.write('\n9mA\n')
 a = mpimg.imread("%sAF_Rex150.JPG" % path)
 b = mpimg.imread("%sIMG_8251.JPG" % path)
 diff_colors(a,b,'9mA', truncate)
 
-file.write('\n8mA\n')
-a = mpimg.imread("%sAF_Rex68.JPG" % path)
-b = mpimg.imread("%sIMG_8252.JPG" % path)
-diff_colors(a,b,'8mA', truncate)
+# file.write('\n8mA\n')
+# a = mpimg.imread("%sAF_Rex68.JPG" % path)
+# b = mpimg.imread("%sIMG_8252.JPG" % path)
+# diff_colors(a,b,'8mA', truncate)
 
-file.write('\n7mA\n')
-a = mpimg.imread("%sAF_Rex56.JPG" % path)
-b = mpimg.imread("%sIMG_8253.JPG" % path)
-diff_colors(a,b,'7mA', truncate)
+# file.write('\n7mA\n')
+# a = mpimg.imread("%sAF_Rex56.JPG" % path)
+# b = mpimg.imread("%sIMG_8253.JPG" % path)
+# diff_colors(a,b,'7mA', truncate)
 
-file.write('\n6mA\n')
-a = mpimg.imread("%sAF_Rex39.JPG" % path)
-b = mpimg.imread("%sIMG_8254.JPG" % path)
-diff_colors(a,b,'6mA', truncate)
+# file.write('\n6mA\n')
+# a = mpimg.imread("%sAF_Rex39.JPG" % path)
+# b = mpimg.imread("%sIMG_8254.JPG" % path)
+# diff_colors(a,b,'6mA', truncate)
 
-file.write('\ndelta1mA\n')
-a = mpimg.imread("%sAF_Rex150.JPG" % path)
-b = mpimg.imread("%sAF_Rex68.JPG" % path)
-diff_colors(a,b,'delta1mA', truncate)
+# file.write('\ndelta1mA\n')
+# a = mpimg.imread("%sAF_Rex150.JPG" % path)
+# b = mpimg.imread("%sAF_Rex68.JPG" % path)
+# diff_colors(a,b,'delta1mA', truncate)
 
-file.write('\ndelta2mA\n')
-a = mpimg.imread("%sAF_Rex150.JPG" % path)
-b = mpimg.imread("%sAF_Rex56.JPG" % path)
-diff_colors(a,b,'delta2mA', truncate)
+# file.write('\ndelta2mA\n')
+# a = mpimg.imread("%sAF_Rex150.JPG" % path)
+# b = mpimg.imread("%sAF_Rex56.JPG" % path)
+# diff_colors(a,b,'delta2mA', truncate)
 
-file.write('\ndelta3mA\n')
-a = mpimg.imread("%sAF_Rex150.JPG" % path)
-b = mpimg.imread("%sAF_Rex39.JPG" % path)
-diff_colors(a,b,'delta3mA', truncate)
+# file.write('\ndelta3mA\n')
+# a = mpimg.imread("%sAF_Rex150.JPG" % path)
+# b = mpimg.imread("%sAF_Rex39.JPG" % path)
+# diff_colors(a,b,'delta3mA', truncate)
 
 file.close()
 
